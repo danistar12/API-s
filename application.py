@@ -29,26 +29,34 @@ def get_books():
         book_data = {'name': book.book_name, 'author': book.author, 'Publisher': book.publisher}
         output.append(book_data)
     return {"books": output}
+
 @app.route('/books/<id>')
 def get_book(id):
-    book= Book.query.get_or_404(id)
-    return {"name":Book.book_name, "Author":Book.author, "Publisher": Book.publisher}
+    book = Book.query.get_or_404(id)
+    return {"name": book.book_name, "Author": book.author, "Publisher": book.publisher}
 
 @app.route('/books', methods=['POST'])
-def add_book(id):
-    book=Book(name= request.json['name'], author=request.json['author'], publisher=request.json['publisher'])
+def add_book():
+    book = Book(book_name=request.json['name'], author=request.json['author'], publisher=request.json['publisher'])
     db.session.add(book)
     db.session.commit()
-    return {'id':Book.id}
+    return {'id': book.id}
 
 @app.route('/books', methods=['DELETE'])
 def delete_book(id):
     book = Book.query.get(id)
     if book is None:
         return {"error": "Not found"}
-    db.session.add(book)
+    db.session.delete(book)
     db.session.commit()
-    
+    return {"message": "Book deleted"}
+
+@app.route('/books/titles')
+def get_book_titles():
+    books = Book.query.order_by(Book.book_name).all()
+    titles = [book.book_name for book in books]
+    return jsonify(titles)
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
